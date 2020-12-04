@@ -35,9 +35,9 @@ class PIDController(object):
         self.e2 = np.zeros(size)
         # ADJUST PARAMETERS BELOW
         delay = 0
-        self.Kp = 0
-        self.Ki = 0
-        self.Kd = 0
+        self.Kp = 25
+        self.Ki = 0.3
+        self.Kd = -0.2
         self.y = deque(np.zeros(size), maxlen=delay + 1)
 
     def set_delay(self, delay):
@@ -52,8 +52,37 @@ class PIDController(object):
         @param sensor: current values from sensor
         @return control signal
         '''
+        
         # YOUR CODE HERE
-
+        q0 = self.Kp + self.Ki * self.dt + float(self.Kd/self.dt)
+        q1 = - self.Kp - 2*float(self.Kd/self.dt)
+        q2 = float(self.Kd/self.dt)
+        
+        next_u = list()
+        pred_angles =[]
+        
+        for i in range(len(sensor)):
+            
+            # predict angle for current joint
+            pred_angles.append(self.u[i] * self.dt)
+            
+            sum_pred_angles = 0
+            for predictions in self.y:
+                p = predictions + np.zeros(len(sensor))
+                sum_pred_angles += p[i]
+            
+            # calculate input     
+            e = target[i] - sensor[i] - pred_angles[i] + sum_pred_angles
+            
+            # calculate control signal
+            next_u.append(self.u[i] + q0*e + q1* self.e1[i] + q2* self.e2[i])
+            
+            self.e1[i] = e
+            self.e2[i] = self.e1[i]
+            
+        self.y.append(pred_angles)
+        self.u = next_u
+        
         return self.u
 
 
