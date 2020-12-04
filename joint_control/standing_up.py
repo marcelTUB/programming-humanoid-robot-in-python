@@ -12,6 +12,7 @@ from keyframes import leftBellyToStand
 from keyframes import rightBackToStand
 from keyframes import rightBellyToStand
 from keyframes import fallToBack
+from keyframes import fallToBelly
 import numpy as np
 
 class StandingUpAgent(PostureRecognitionAgent):
@@ -21,12 +22,8 @@ class StandingUpAgent(PostureRecognitionAgent):
     
     def addOffset(self, newKeyframes, offsetTime):
         
-        
         (names, times, keys) = newKeyframes
-        t = times[0]
-        maxTime = t[len(t)-1]
-        
-           
+
         for j in range(len(names)):
             for i in range(len(times[j])):
                times[j][i] = times[j][i] + offsetTime
@@ -38,17 +35,50 @@ class StandingUpAgent(PostureRecognitionAgent):
        
       
         time_now = self.perception.time 
-        offCycle = self.stiffness_off_cycle
+        stiffness_off_cycle = self.stiffness_off_cycle
+        stiffness_on_cycle = self.stiffness_on_cycle
+        stiffness_on_off_time = self.stiffness_on_off_time
         
         
-        if time_now - self.stiffness_on_off_time < self.stiffness_off_cycle:
-            self.keyframes = fallToBack.fallToBack()
-        else:    
-            if posture == "Stand":
-            #do nothing
-                a = 0
+        alternate = stiffness_on_off_time // (stiffness_off_cycle + stiffness_on_cycle)
+        
+        if time_now - stiffness_on_off_time < stiffness_off_cycle:
+            # Lets the robot fall alternately on its belly and back
+            if alternate % 2 == 0:  
+                self.keyframes = self.addOffset(fallToBack.fallToBack() , self.stiffness_on_off_time)
             else:
-                self.keyframes = self.addOffset(rightBackToStand.rightBackToStand(), self.stiffness_on_off_time + offCycle)
+                self.keyframes = self.addOffset(fallToBelly.fallToBelly() , self.stiffness_on_off_time)
+        else:    
+            offsetTime = stiffness_on_off_time + stiffness_off_cycle
+            if posture == "Belly":
+                    self.startingPosition =  "Belly"
+                    self.keyframes = self.addOffset(rightBellyToStand.rightBellyToStand(), offsetTime)
+            elif posture == "Back":
+                    self.startingPosition =  "Back"
+                    self.keyframes = self.addOffset(rightBackToStand.rightBackToStand(), offsetTime)
+                    
+            # TODO call the right keyframe motion for all postures 
+            
+            # elif posture == "Sit":
+            #         self.keyframes = self.addOffset(rightBackToStand.rightBackToStand(), offsetTime)
+            #         print("posture:  Sit")
+            # elif posture == "Crouch":
+            #         self.keyframes = self.addOffset(rightBellyToStand.rightBellyToStand(), offsetTime) 
+            #         print("posture:  Crouch")
+            # elif posture == "Frog":
+            #         self.keyframes = self.addOffset(rightBellyToStand.rightBellyToStand(), offsetTime)
+            #         print("posture:  Frog")
+            # elif posture == "StandInit":
+            #     previousPosture
+            #         self.keyframes = self.addOffset(rightBellyToStand.rightBellyToStand(), offsetTime)
+            #         print("posture:  StandInit")
+            else:
+                #workaround use starting position
+                if self.startingPosition == "Back":
+                    self.keyframes = self.addOffset(rightBackToStand.rightBackToStand(), offsetTime)
+                else:
+                    self.keyframes = self.addOffset(rightBellyToStand.rightBellyToStand(), offsetTime)
+            
         if time_now - self.stiffness_on_off_time > self.stiffness_on_cycle + self.stiffness_off_cycle:
             self.stiffness_on_off_time = time_now
 
@@ -66,12 +96,13 @@ class TestStandingUpAgent(StandingUpAgent):
         super(TestStandingUpAgent, self).__init__(simspark_ip, simspark_port, teamname, player_id, sync_mode)
         self.stiffness_on_off_time = 0
         self.stiffness_on_cycle = 15  # in seconds
-        self.stiffness_off_cycle = 6  # in seconds
+        self.stiffness_off_cycle = 5  # in seconds
+        self.startingPosition = "unknown"
 
     def think(self, perception):
         action = super(TestStandingUpAgent, self).think(perception)
         time_now = perception.time
-        print(time_now)
+        # print("time: " + "{:.4f}".format(time_now))
  
 
         return action

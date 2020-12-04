@@ -54,10 +54,9 @@ class AngleInterpolationAgent(PIDAgent):
             try:  
                 current_angle = perception.joint[name]
             except KeyError:
-                print("can not find joint with name " + name)
+                # print("can not find joint with name " + name)
                 current_angle = 0
-                
-                
+                       
             joint_times = times[name_I]
             joint_keys = keys[name_I]
             
@@ -99,9 +98,9 @@ class AngleInterpolationAgent(PIDAgent):
                     
        
                     
-    
-                    for j in range(101):
-                        i = float(j)/100.0
+                    # increasing resolution causes lags
+                    for j in range(11):
+                        i = float(j)/10.0
                         
                         k0 = (1.0-i)**3.0
                         k1 = 3.0*i*(1.0-i)**2.0
@@ -125,7 +124,7 @@ class AngleInterpolationAgent(PIDAgent):
             target_joints.update({name: targetJoint[0]})
             
             if name == "LHipYawPitch":
-                print("set RHipYawPitch as LHipYawPitch")
+                #print("set RHipYawPitch as LHipYawPitch")
                 target_joints.update({"RHipYawPitch": targetJoint[0]})
                       
         return target_joints
