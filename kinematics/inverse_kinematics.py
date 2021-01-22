@@ -116,6 +116,7 @@ class InverseKinematicsAgent(ForwardKinematicsAgent):
                       d_theta[j][0] = abs(old_angle - angle)
                 elif angle + d_theta.A[j][0] < boundaries[j][0]:
                       angle = max([boundaries[j][0],angle - 0.1])
+                      d_theta[j][0] = abs(angle - old_angle)
                 else:
                     angle += d_theta.A[j][0]
 
@@ -125,7 +126,7 @@ class InverseKinematicsAgent(ForwardKinematicsAgent):
                 
             # break loop if distance between current and traget postion of end effector is small enough or
             #  or the change in angles is almost zero 
-            if  linalg.norm(e) < 0.01 or linalg.norm(d_theta) < 1e-5:
+            if  linalg.norm(e) < 0.001 :
                 break     
             
         print("current_ee_pos: ")
