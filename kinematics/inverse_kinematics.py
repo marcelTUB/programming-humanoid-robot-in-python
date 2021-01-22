@@ -11,13 +11,12 @@
 
 
 from forward_kinematics import ForwardKinematicsAgent
-
+import numpy as np  
 from numpy.matlib import identity
-from numpy.matlib import random
 from numpy import linalg
-import autograd.numpy as np  # Thinly-wrapped numpy
-from autograd import grad    # The only autograd function you may ever need
+
 from scipy.linalg import pinv
+import matplotlib.pyplot as plt
 
 class InverseKinematicsAgent(ForwardKinematicsAgent):
     def inverse_kinematics(self, effector_name, transform):
@@ -28,15 +27,14 @@ class InverseKinematicsAgent(ForwardKinematicsAgent):
         :return: list of joint angles
         '''
 
-
-        boundaries= [[-1.145303 , 0.740810] , [	-0.379472, 0.790477], [-1.535889, 0.484090], [-0.092346 ,2.112528], [-1.189516, 0.922747], [-0.397880, 0.769001]]
+        
+        boundaries= [[-1.145303 , 0.740810], [-0.379472, 0.790477], [-1.535889, 0.484090], [-0.092346 ,2.112528], [-1.189516, 0.922747], [-0.397880, 0.769001]]
               
         chain = self.chains[effector_name.upper()]
         joint_angles = [] # current Orientation
         max_step = 1
         lambda_ = 1
-        h = 0.001
-        
+
         joints = self.perception.joint
         self.forward_kinematics(joints)
         
@@ -52,7 +50,7 @@ class InverseKinematicsAgent(ForwardKinematicsAgent):
         
         for i in range(1000):
             
-            
+
             self.forward_kinematics(joints)
 
             # get current ee position
@@ -69,8 +67,8 @@ class InverseKinematicsAgent(ForwardKinematicsAgent):
             
             
             for j in range(len(chain)):
-                
-                
+                   
+
                 joint = chain[j]
                              
                 # get the current xyz position of joint
@@ -99,7 +97,7 @@ class InverseKinematicsAgent(ForwardKinematicsAgent):
             J_inv = pinv(J) 
 
             # calculate delta theta
-            d_theta =  np.dot(J_inv,e.T)
+            d_theta = lambda_ *  np.dot(J_inv,e.T)
             
             for j in range(len(chain)) :
                 joint = chain[j]
@@ -110,19 +108,24 @@ class InverseKinematicsAgent(ForwardKinematicsAgent):
                 # if new angle is too big converge to upper boundary
                 # elif new angle is too small converge to lower boundary
                 # else add dtheta
-                if boundaries[j][1]  <= angle + d_theta.A[j][0]  :
-                      angle = np.minimum([boundaries[j][1]],[angle + 0.05])[0]
-                elif angle + d_theta.A[j][0] <= boundaries[j][0]:
-                      angle = np.maximum([boundaries[j][1]],[angle - 0.05])[0]
+                old_angle = angle
+ 
+    
+                if boundaries[j][1]  <= angle + d_theta.A[j][0]:
+                      angle = min([boundaries[j][1],angle + 0.1])
+                      d_theta[j][0] = abs(old_angle - angle)
+                elif angle + d_theta.A[j][0] < boundaries[j][0]:
+                      angle = max([boundaries[j][0],angle - 0.1])
                 else:
                     angle += d_theta.A[j][0]
-                    
+
+
                 # update joint's new value
                 joints.update({joint: angle})
                 
             # break loop if distance between current and traget postion of end effector is small enough or
             #  or the change in angles is almost zero 
-            if  linalg.norm(e) < 0.1 or linalg.norm(d_theta) < 1e-5:
+            if  linalg.norm(e) < 0.01 or linalg.norm(d_theta) < 1e-5:
                 break     
             
         print("current_ee_pos: ")
@@ -140,7 +143,7 @@ class InverseKinematicsAgent(ForwardKinematicsAgent):
         '''solve the inverse kinematics and control joints use the results
         '''
         # YOUR CODE HERE
-         
+        
         joints = self.inverse_kinematics(effector_name, transform)
         time_now = self.perception.time
         keyframeActionTime = time_now + 3.0
@@ -164,8 +167,9 @@ if __name__ == '__main__':
     T = identity(4)
     
     # translation in x coordinate has to be at least 0.1. Otherwise translation in z coordinate doesn't work
-    T[0, -1] = 0.1
-    T[1, -1] = 0.0001
-    T[2, -1] = 100
+    T[0, -1] = 8.0
+    T[1, -1] = 1.0
+    T[2, -1] = 5.0
+
     agent.set_transforms('LLeg', T)
     agent.run()
