@@ -131,30 +131,31 @@ if __name__ == '__main__':
     
 
     agent.get_angle("LKneePitch")
-    
+
     agent.set_angle("LShoulderRoll", -1.0)
     
+    # should be Stand
     agent.get_posture()
     
-    keyframes = wipe_forehead.wipe_forehead(0)
-    agent.execute_keyframes(keyframes)
-    
-    # TODO how to make this call blocking?
-    # agent.post.execute_keyframes(keyframes)
-    
-    
     T = identity(4)
-
-    T[0, -1] = 8.0
+    T[0, -1] = 10.0
     T[1, -1] = 1.0
-    T[2, -1] = 105.0
+    T[2, -1] = 20.0
     
     T_list = T.tolist()
     json_T= json.dumps(T_list)
 
     agent.set_transform('LLeg', json_T)
+    
+    # non blocking call
     # agent.post.set_transform('LLeg', json_T)
     
     agent.get_transform("LShoulderRoll")
     
-    agent.get_angle("LKneePitch")
+    
+    # keyframes = wipe_forehead.wipe_forehead(0)
+    # agent.execute_keyframes(keyframes)
+    
+    # TODO how to make this call blocking?
+    # agent.post.execute_keyframes(keyframes)
+    
