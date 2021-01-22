@@ -86,7 +86,7 @@ class ForwardKinematicsAgent(AngleInterpolationAgent):
         # if joint_name == "LHipYawPitch":
             T = T 
         if "Roll" in joint_name:
-            T = np.dot(T, np.array([[1.0,0,0,0],[0,c,-s,0],[0,s,c,0],[0,0,0,1]])) 
+            T = np.dot(T, np.array([[1.0,0,0,0],[0,c,-s,0],[0,s,c,0],[0,0,0,1.0]])) 
         elif "Pitch" in joint_name:  
             T = np.dot(T, np.array([[c,0,s,0],[0,1.0,0,0],[-s,0,c,0],[0,0,0,1.0]]))
         elif "Yaw" in joint_name: 
@@ -107,7 +107,11 @@ class ForwardKinematicsAgent(AngleInterpolationAgent):
         for chain_joints in self.chains.values():
             T = identity(4)
             for joint in chain_joints:
-                angle = joints[joint]
+                try:
+                    angle = joints[joint]
+                except:
+                    print("joint not found")
+                    continue
                 
                 # get rotation matrix
                 T_rot = self.local_trans(joint, angle)
@@ -157,6 +161,7 @@ class ForwardKinematicsAgent(AngleInterpolationAgent):
                 
                 
                 self.transforms[joint] = T
+        return True
                 
 if __name__ == '__main__':
     agent = ForwardKinematicsAgent()
