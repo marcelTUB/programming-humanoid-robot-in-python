@@ -30,8 +30,11 @@ import pickle
 
 
 
-ROBOT_POSE_DATA_DIR = 'robot_pose_data'
-ROBOT_POSE_CLF = 'robot_pose.pkl'
+## with relative path
+dn = path.dirname(path.realpath(__file__))
+ROBOT_POSE_DATA_DIR = path.join(dn,"robot_pose_data")
+ROBOT_POSE_CLF = path.join(dn,"robot_pose.pkl")
+
 
 class PostureRecognitionAgent(AngleInterpolationAgent):
     def __init__(self, simspark_ip='localhost',
@@ -101,7 +104,7 @@ class PostureRecognitionAgent(AngleInterpolationAgent):
         
         predicted = clf2.predict([joints])
         posture = classes[predicted[0]]
-        
+
         return posture
 
 if __name__ == '__main__':
