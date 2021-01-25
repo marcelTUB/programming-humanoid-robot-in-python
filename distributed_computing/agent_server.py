@@ -88,9 +88,15 @@ class ServerAgent(InverseKinematicsAgent):
         '''excute keyframes, note this function is blocking call,
         e.g. return until keyframes are executed
         '''
-        newKeyframes = self.addOffset(keyframes, self.perception.time)
-        agent.keyframes = newKeyframes
-        return True
+        
+        if not hasattr(self, 'keyframes_end') or self.perception.time > self.keyframes_end:
+            
+            self.keyframes_end = self.perception.time + keyframes[1][0][-1]
+            newKeyframes = self.addOffset(keyframes, self.perception.time)
+            agent.keyframes = newKeyframes
+            return True
+        else:
+            return False
 
     def get_transform(self, name):
         '''get transform with given name
