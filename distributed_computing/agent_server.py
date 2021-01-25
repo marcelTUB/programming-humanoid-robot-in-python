@@ -20,9 +20,6 @@ import socketserver
 sys.path.append(os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', 'kinematics'))
 from inverse_kinematics import InverseKinematicsAgent
 
-sys.path.append(os.path.join(os.path.abspath(os.path.dirname(__file__)), '..', 'joint_control'))
-from recognize_posture import PostureRecognitionAgent
-
 from xmlrpc.server import SimpleXMLRPCServer
 import json
 
@@ -84,8 +81,8 @@ class ServerAgent(InverseKinematicsAgent):
     def get_posture(self):
         '''return current posture of robot'''
         # YOUR CODE HERE
-        posture = PostureRecognitionAgent.recognize_posture(self, self.perception)
-        return posture
+        
+        return self.posture
 
     def execute_keyframes(self, keyframes):
         '''excute keyframes, note this function is blocking call,
